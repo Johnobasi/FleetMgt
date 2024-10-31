@@ -1,34 +1,63 @@
-﻿using System.IO;
+﻿using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace Aleepartners.CarFleetManagement.Models
 {
     public class DataManager
     {
-        private const string StatusFilePath = "FileSystem\\status.ledger";
-        private const string FuelFilePath = "FileSystem\\fuel.ledger";
+        private readonly string _carStatusFilePath; 
+        private readonly string  _fuelFilePath;
         public DataManager()
         {
-            SetupFileWatcher(StatusFilePath);
-            SetupFileWatcher(FuelFilePath);
+            // Load configuration
+            var config = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+
+            try
+            {
+                _carStatusFilePath = config["FilePaths:StatusFilePath"];
+                _fuelFilePath = config["FilePaths:FuelFilePath"];
+
+                if (string.IsNullOrEmpty(_carStatusFilePath) || string.IsNullOrEmpty(_fuelFilePath))
+                {
+                    throw new FileNotFoundException("One or both file paths are missing in configuration.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("Failed to initialize file watchers.", ex);
+                throw;
+            }
+
         }
         public List<Car> LoadCarStatus()
         {
             var carStatuses = new List<Car>();
 
-            foreach (var line in File.ReadLines(StatusFilePath))
+            try
             {
-                var fields = line.Split(',');
-                var car = new Car
+                foreach (var line in File.ReadLines(_carStatusFilePath))
                 {
-                    Vin = fields[0].Trim(), // Assign VIN directly from fields[0]
-                    NumberPlate = ExtractField(fields[1], "Number Plate"),
-                    Colour = ExtractField(fields[1], "Colour"),
-                    Make = ExtractField(fields[1], "Make"),
-                    Model = ExtractField(fields[1], "Model"),
-                    Mileage = TryParseMileage(ExtractField(fields[1], "Mileage"))
-                };
-                carStatuses.Add(car);
+                    var fields = line.Split(',');
+                    var car = new Car
+                    {
+                        Vin = fields[0].Trim(), // Assign VIN directly from fields[0]
+                        NumberPlate = ExtractField(fields[1], "Number Plate"),
+                        Colour = ExtractField(fields[1], "Colour"),
+                        Make = ExtractField(fields[1], "Make"),
+                        Model = ExtractField(fields[1], "Model"),
+                        Mileage = TryParseMileage(ExtractField(fields[1], "Mileage"))
+                    };
+                    carStatuses.Add(car);
+                }
             }
+            catch (Exception ex)
+            {
+                Logger.LogError("Error loading car status data.", ex);
+            }
+
 
             return carStatuses;
         }
@@ -37,19 +66,27 @@ namespace Aleepartners.CarFleetManagement.Models
         {
             var fuelEntries = new List<FuelEntry>();
 
-            foreach (var line in File.ReadLines(FuelFilePath))
+            try
             {
-                var fields = line.Split(',');
-                var entry = new FuelEntry
+                foreach (var line in File.ReadLines(_fuelFilePath))
                 {
-                    NumberPlate = fields[0],
-                    FuelInLitres = double.Parse(fields[1]),
-                    Mileage = int.Parse(fields[2]),
-                    Cost = decimal.Parse(fields[3]),
-                    DateAndTimeOfPurchase = DateTime.Parse(fields[4])
-                };
-                fuelEntries.Add(entry);
+                    var fields = line.Split(',');
+                    var entry = new FuelEntry
+                    {
+                        NumberPlate = fields[0],
+                        FuelInLitres = double.Parse(fields[1]),
+                        Mileage = int.Parse(fields[2]),
+                        Cost = decimal.Parse(fields[3]),
+                        DateAndTimeOfPurchase = DateTime.Parse(fields[4])
+                    };
+                    fuelEntries.Add(entry);
+                }
             }
+            catch (Exception ex)
+            {
+                Logger.LogError("Fuel file not found.", ex);
+            }
+
 
             return fuelEntries;
         }
