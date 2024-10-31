@@ -28,13 +28,17 @@ namespace Aleepartners.CarFleetManagement.ViewModels
 
         private void LoadData()
         {
+            // Load data from DataManager
             CarStatusCollection = new ObservableCollection<Car>(_dataManager.LoadCarStatus());
             FuelEntryCollection = new ObservableCollection<FuelEntry>(_dataManager.LoadFuelData());
+
+            // Calculate and update fuel consumption and mileage
             UpdateFuelConsumption();
         }
 
         private void UpdateFuelConsumption()
         {
+            // Calculate total mileage and average consumption using FuelEntryCollection
             var fuelEntries = _dataManager.LoadFuelData();
             foreach (var car in CarStatusCollection)
             {
