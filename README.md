@@ -65,3 +65,9 @@ Calculating metrics such as total fuel consumed, mileage, and average fuel consu
 
 The Car Fleet Management application effectively utilizes Prism to create a modular, maintainable, and responsive user interface for managing vehicle and fuel data. 
 The architecture supports real-time updates and provides a clear separation of concerns between the UI and business logic.
+
+
+#How to run this project
+- unzip profile into any location on your PC
+- Ensure you have dotnet 8 sdk and runtime
+- Then run 
