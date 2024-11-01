@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Aleepartners.CarFleetManagement.Models;
 using Aleepartners.CarFleetManagement.Views;
 
 namespace Aleepartners.CarFleetManagement
@@ -15,7 +16,7 @@ namespace Aleepartners.CarFleetManagement
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            //throw new NotImplementedException();
+            containerRegistry.RegisterForNavigation<IDataManager, DataManager>();
         }
     }
 

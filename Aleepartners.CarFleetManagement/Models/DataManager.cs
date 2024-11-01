@@ -4,16 +4,16 @@ using System.IO;
 
 namespace Aleepartners.CarFleetManagement.Models
 {
-    public class DataManager
+    public class DataManager : IDataManager
     {
-        private readonly string _carStatusFilePath; 
-        private readonly string  _fuelFilePath;
+        private readonly string _carStatusFilePath;
+        private readonly string _fuelFilePath;
         public ObservableCollection<Car> CarStatusCollection { get; private set; }
         public DataManager()
         {
             // Initialize ObservableCollection
             CarStatusCollection = new ObservableCollection<Car>();
-            
+
             // Load configuration
             var config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -106,7 +106,7 @@ namespace Aleepartners.CarFleetManagement.Models
                     {
                         fuelEntries[numberPlate] = new FuelStatistics();
                     }
-                  
+
                     var fuelStats = fuelEntries[numberPlate];
                     fuelStats.TotalFuel += fuelInLitres;
                     fuelStats.TotalMileage += mileage;
@@ -170,10 +170,10 @@ namespace Aleepartners.CarFleetManagement.Models
             {
                 return mileage;
             }
-            return 0; 
+            return 0;
         }
 
-        private void ReloadData()
+        public void ReloadData()
         {
             // Clear the existing collection and reload it with fresh data
             CarStatusCollection.Clear();
