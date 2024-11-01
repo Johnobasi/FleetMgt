@@ -11,24 +11,22 @@ namespace Aleepartners.CarFleetManagement.Models
         public string Colour { get; set; }
         public string Make { get; set; }
         public string Model { get; set; }
+        private double _averageFuelConsumption;
 
-
-        // Computed properties for fuel details
         private double _totalFuelConsumed;
+        private int _mileage;
         public double TotalFuelConsumed
         {
             get => _totalFuelConsumed;
             set { _totalFuelConsumed = value; OnPropertyChanged(nameof(TotalFuelConsumed)); }
         }
 
-        private double _averageFuelConsumption;
         public double AverageFuelConsumption
         {
             get => _averageFuelConsumption;
             set { _averageFuelConsumption = value; OnPropertyChanged(nameof(AverageFuelConsumption)); }
         }
 
-        private int _mileage;
         public int Mileage
         {
             get => _mileage;

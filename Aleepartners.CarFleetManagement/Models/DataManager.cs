@@ -88,7 +88,7 @@ namespace Aleepartners.CarFleetManagement.Models
 
         public Dictionary<string, FuelStatistics> LoadFuelData()
         {
-            //var fuelEntries = new List<FuelEntry>();
+
             var fuelEntries = new Dictionary<string, FuelStatistics>();
 
             try
@@ -107,7 +107,6 @@ namespace Aleepartners.CarFleetManagement.Models
                         fuelEntries[numberPlate] = new FuelStatistics();
                     }
                   
-                    // Accumulate the fuel stats
                     var fuelStats = fuelEntries[numberPlate];
                     fuelStats.TotalFuel += fuelInLitres;
                     fuelStats.TotalMileage += mileage;

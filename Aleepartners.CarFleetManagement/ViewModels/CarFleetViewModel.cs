@@ -52,6 +52,10 @@ namespace Aleepartners.CarFleetManagement.ViewModels
 
             // Calculate and update fuel consumption and mileage
             UpdateFuelConsumption();
+
+            // Notify UI about updated CarStatusCollection
+            RaisePropertyChanged(nameof(CarStatusCollection));
+            RaisePropertyChanged(nameof(FuelEntryCollection));
         }
 
         private void UpdateFuelConsumption()
@@ -78,7 +82,6 @@ namespace Aleepartners.CarFleetManagement.ViewModels
                         ? (car.TotalFuelConsumed / car.Mileage) * 100 // Assuming L/100 km format
                         : 0;
                 }
-
             }
 
             // Notify UI about updated CarStatuses collection
