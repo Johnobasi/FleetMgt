@@ -6,12 +6,12 @@ namespace Aleepartners.CarFleetManagement.ViewModels
     public class MainViewModel : BindableBase
     {
         private readonly DataManager _dataManager;
-        public ObservableCollection<Car> _carStatuses;
+        public ObservableCollection<Car> _carStatusCollection;
         private ObservableCollection<FuelEntry> _fuelEntryCollection;
         public ObservableCollection<Car> CarStatusCollection
         {
-            get => _carStatuses;
-            set => SetProperty(ref _carStatuses, value);
+            get => _carStatusCollection;
+            set => SetProperty(ref _carStatusCollection, value);
         }
         public ObservableCollection<FuelEntry> FuelEntryCollection
         {
@@ -30,7 +30,25 @@ namespace Aleepartners.CarFleetManagement.ViewModels
         {
             // Load data from DataManager
             CarStatusCollection = new ObservableCollection<Car>(_dataManager.LoadCarStatus());
-            FuelEntryCollection = new ObservableCollection<FuelEntry>(_dataManager.LoadFuelData());
+            
+            // Load fuel data from DataManager
+            var fuelData = _dataManager.LoadFuelData();
+            FuelEntryCollection = new ObservableCollection<FuelEntry>();
+
+            // Convert FuelStatistics into FuelEntry objects for binding
+            foreach (var entry in fuelData)
+            {
+                var numberPlate = entry.Key;
+                var fuelStats = entry.Value;
+
+                // Create a new FuelEntry for each number plate
+                FuelEntryCollection.Add(new FuelEntry
+                {
+                    NumberPlate = numberPlate,
+                    FuelInLitres = fuelStats.TotalFuel,
+                    Mileage = fuelStats.TotalMileage
+                });
+            }
 
             // Calculate and update fuel consumption and mileage
             UpdateFuelConsumption();
@@ -38,17 +56,29 @@ namespace Aleepartners.CarFleetManagement.ViewModels
 
         private void UpdateFuelConsumption()
         {
-            // Calculate total mileage and average consumption using FuelEntryCollection
-            var fuelEntries = _dataManager.LoadFuelData();
+            // Clear previous values to avoid accumulation
+            foreach (var car in CarStatusCollection)
+            {
+                car.TotalFuelConsumed = 0;
+                car.Mileage = 0;
+                car.AverageFuelConsumption = 0;
+            }
+
             foreach (var car in CarStatusCollection)
             {
                 var carFuelEntries = FuelEntryCollection.Where(entry => entry.NumberPlate == car.NumberPlate);
 
-                car.Mileage = carFuelEntries.Sum(entry => entry.Mileage);
-                car.TotalFuelConsumed = carFuelEntries.Sum(entry => entry.FuelInLitres);
-                car.AverageFuelConsumption = car.Mileage > 0
-                    ? car.TotalFuelConsumed / car.Mileage
-                    : 0;
+                // If there are fuel entries, proceed with calculations
+                if (carFuelEntries.Any())
+                {
+                    car.Mileage = carFuelEntries.Sum(entry => entry.Mileage);
+                    car.TotalFuelConsumed = carFuelEntries.Sum(entry => entry.FuelInLitres);
+
+                    car.AverageFuelConsumption = car.Mileage > 0
+                        ? (car.TotalFuelConsumed / car.Mileage) * 100 // Assuming L/100 km format
+                        : 0;
+                }
+
             }
 
             // Notify UI about updated CarStatuses collection

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using System.Collections.ObjectModel;
 using System.IO;
 
 namespace Aleepartners.CarFleetManagement.Models
@@ -7,8 +8,12 @@ namespace Aleepartners.CarFleetManagement.Models
     {
         private readonly string _carStatusFilePath; 
         private readonly string  _fuelFilePath;
+        public ObservableCollection<Car> CarStatusCollection { get; private set; }
         public DataManager()
         {
+            // Initialize ObservableCollection
+            CarStatusCollection = new ObservableCollection<Car>();
+            
             // Load configuration
             var config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -24,6 +29,13 @@ namespace Aleepartners.CarFleetManagement.Models
                 {
                     throw new FileNotFoundException("One or both file paths are missing in configuration.");
                 }
+
+                // Initial load of data
+                ReloadData();
+
+                // Setup file watchers
+                SetupFileWatcher(_carStatusFilePath);
+                SetupFileWatcher(_fuelFilePath);
             }
             catch (Exception ex)
             {
@@ -52,6 +64,18 @@ namespace Aleepartners.CarFleetManagement.Models
                     };
                     carStatuses.Add(car);
                 }
+
+                // Aggregate fuel data and update car statuses
+                var fuelData = LoadFuelData();
+                foreach (var car in carStatuses)
+                {
+                    if (fuelData.TryGetValue(car.NumberPlate, out var fuelStats))
+                    {
+                        car.TotalFuelConsumed = fuelStats.TotalFuel;
+                        car.Mileage = fuelStats.TotalMileage;
+                        car.AverageFuelConsumption = fuelStats.AverageFuelConsumption;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -62,24 +86,34 @@ namespace Aleepartners.CarFleetManagement.Models
             return carStatuses;
         }
 
-        public List<FuelEntry> LoadFuelData()
+        public Dictionary<string, FuelStatistics> LoadFuelData()
         {
-            var fuelEntries = new List<FuelEntry>();
+            //var fuelEntries = new List<FuelEntry>();
+            var fuelEntries = new Dictionary<string, FuelStatistics>();
 
             try
             {
                 foreach (var line in File.ReadLines(_fuelFilePath))
                 {
                     var fields = line.Split(',');
-                    var entry = new FuelEntry
+                    var numberPlate = fields[0];
+                    var fuelInLitres = double.Parse(fields[1]);
+                    var mileage = int.Parse(fields[2]);
+                    var cost = decimal.Parse(fields[3]);
+                    var dateAndTimeOfPurchase = DateTime.Parse(fields[4]);
+
+                    if (!fuelEntries.ContainsKey(numberPlate))
                     {
-                        NumberPlate = fields[0],
-                        FuelInLitres = double.Parse(fields[1]),
-                        Mileage = int.Parse(fields[2]),
-                        Cost = decimal.Parse(fields[3]),
-                        DateAndTimeOfPurchase = DateTime.Parse(fields[4])
-                    };
-                    fuelEntries.Add(entry);
+                        fuelEntries[numberPlate] = new FuelStatistics();
+                    }
+                  
+                    // Accumulate the fuel stats
+                    var fuelStats = fuelEntries[numberPlate];
+                    fuelStats.TotalFuel += fuelInLitres;
+                    fuelStats.TotalMileage += mileage;
+                    fuelStats.EntryCount++;
+                    fuelStats.AverageFuelConsumption = fuelStats.EntryCount > 0 ? fuelStats.TotalFuel / fuelStats.EntryCount : 0;
+
                 }
             }
             catch (Exception ex)
@@ -119,7 +153,15 @@ namespace Aleepartners.CarFleetManagement.Models
 
         private void OnFileChanged()
         {
-            FileChanged?.Invoke();
+            try
+            {
+                ReloadData(); // Reload data and refresh the collection
+                FileChanged?.Invoke(); // Notify subscribers that data has changed
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("Error reloading data on file change.", ex);
+            }
         }
 
         private int TryParseMileage(string mileageString)
@@ -130,6 +172,18 @@ namespace Aleepartners.CarFleetManagement.Models
                 return mileage;
             }
             return 0; 
+        }
+
+        private void ReloadData()
+        {
+            // Clear the existing collection and reload it with fresh data
+            CarStatusCollection.Clear();
+            var carStatuses = LoadCarStatus();
+
+            foreach (var car in carStatuses)
+            {
+                CarStatusCollection.Add(car);
+            }
         }
     }
 }
