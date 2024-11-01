@@ -16,7 +16,10 @@ namespace Aleepartners.CarFleetManagement
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterForNavigation<IDataManager, DataManager>();
+            // Register services and views for navigation
+            containerRegistry.Register<IDataManager, DataManager>();  
+            containerRegistry.RegisterForNavigation<MainView>();
+
         }
     }
 
