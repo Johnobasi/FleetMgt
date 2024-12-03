@@ -1,6 +1,6 @@
-﻿namespace Aleepartners.CarFleetManagement.Models
+﻿namespace FleetMgt.Models
 {
-    // Helper class to store aggregated fuel data per car
+    //Helper class to store aggregated fuel data per car
     public class FuelStatistics
     {
         public double TotalFuel { get; set; }

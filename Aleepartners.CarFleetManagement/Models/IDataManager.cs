@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 
-namespace Aleepartners.CarFleetManagement.Models
+namespace FleetMgt.Models
 {
     public interface IDataManager
     {

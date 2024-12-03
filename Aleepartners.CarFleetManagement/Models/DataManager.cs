@@ -1,53 +1,48 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 
-namespace Aleepartners.CarFleetManagement.Models
+namespace FleetMgt.Models
 {
     public class DataManager : IDataManager
     {
         private readonly string _carStatusFilePath;
         private readonly string _fuelFilePath;
+
+        private readonly List<FileSystemWatcher> _fileWatchers = new();
+
         public ObservableCollection<Car> CarStatusCollection { get; private set; }
+
         public DataManager()
         {
-            // Initialize ObservableCollection
             CarStatusCollection = new ObservableCollection<Car>();
 
             // Load configuration
             var config = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
 
-            try
-            {
-                _carStatusFilePath = config["FilePaths:StatusFilePath"];
-                _fuelFilePath = config["FilePaths:FuelFilePath"];
+            _carStatusFilePath = config["FilePaths:StatusFilePath"];
+            _fuelFilePath = config["FilePaths:FuelFilePath"];
 
-                if (string.IsNullOrEmpty(_carStatusFilePath) || string.IsNullOrEmpty(_fuelFilePath))
-                {
-                    throw new FileNotFoundException("One or both file paths are missing in configuration.");
-                }
+            if (string.IsNullOrEmpty(_carStatusFilePath) || string.IsNullOrEmpty(_fuelFilePath))
+                throw new FileNotFoundException("One or both file paths are missing in configuration.");
 
-                // Initial load of data
-                ReloadData();
+            // Initial load of data
+            ReloadData();
 
-                // Setup file watchers
-                SetupFileWatcher(_carStatusFilePath);
-                SetupFileWatcher(_fuelFilePath);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError("Failed to initialize file watchers.", ex);
-                throw;
-            }
-
+            // Setup file watchers
+            SetupFileWatcher(_carStatusFilePath);
+            SetupFileWatcher(_fuelFilePath);
         }
+
         public List<Car> LoadCarStatus()
         {
             var carStatuses = new List<Car>();
 
+            Debug.WriteLine("Loading car status data...");
             try
             {
                 foreach (var line in File.ReadLines(_carStatusFilePath))
@@ -55,7 +50,7 @@ namespace Aleepartners.CarFleetManagement.Models
                     var fields = line.Split(',');
                     var car = new Car
                     {
-                        Vin = fields[0].Trim(), // Assign VIN directly from fields[0]
+                        Vin = fields[0].Trim(),
                         NumberPlate = ExtractField(fields[1], "Number Plate"),
                         Colour = ExtractField(fields[1], "Colour"),
                         Make = ExtractField(fields[1], "Make"),
@@ -77,20 +72,19 @@ namespace Aleepartners.CarFleetManagement.Models
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.LogError("Error loading car status data.", ex);
+                Debug.WriteLine("Error loading car status data.");
             }
-
 
             return carStatuses;
         }
 
         public Dictionary<string, FuelStatistics> LoadFuelData()
         {
-
             var fuelEntries = new Dictionary<string, FuelStatistics>();
 
+            Debug.WriteLine("Loading fuel data...");
             try
             {
                 foreach (var line in File.ReadLines(_fuelFilePath))
@@ -99,8 +93,6 @@ namespace Aleepartners.CarFleetManagement.Models
                     var numberPlate = fields[0];
                     var fuelInLitres = double.Parse(fields[1]);
                     var mileage = int.Parse(fields[2]);
-                    var cost = decimal.Parse(fields[3]);
-                    var dateAndTimeOfPurchase = DateTime.Parse(fields[4]);
 
                     if (!fuelEntries.ContainsKey(numberPlate))
                     {
@@ -110,16 +102,15 @@ namespace Aleepartners.CarFleetManagement.Models
                     var fuelStats = fuelEntries[numberPlate];
                     fuelStats.TotalFuel += fuelInLitres;
                     fuelStats.TotalMileage += mileage;
-                    fuelStats.EntryCount++;
-                    fuelStats.AverageFuelConsumption = fuelStats.EntryCount > 0 ? fuelStats.TotalFuel / fuelStats.EntryCount : 0;
-
+                    fuelStats.AverageFuelConsumption = fuelStats.TotalMileage > 0
+                        ? (fuelStats.TotalFuel / fuelStats.TotalMileage) * 100 // L/100 km format
+                        : 0;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.LogError("Fuel file not found.", ex);
+                Debug.WriteLine("Error loading fuel data.");
             }
-
 
             return fuelEntries;
         }
@@ -138,46 +129,46 @@ namespace Aleepartners.CarFleetManagement.Models
 
         private void SetupFileWatcher(string filePath)
         {
+            Debug.WriteLine($"Setting up file watcher for {filePath}...");
             var watcher = new FileSystemWatcher
             {
                 Path = Path.GetDirectoryName(filePath),
                 Filter = Path.GetFileName(filePath),
                 NotifyFilter = NotifyFilters.LastWrite
             };
+
             watcher.Changed += (s, e) => OnFileChanged();
             watcher.EnableRaisingEvents = true;
+
+            _fileWatchers.Add(watcher); // Keep strong reference to avoid garbage collection
         }
 
         public event Action FileChanged;
 
         private void OnFileChanged()
         {
+            Debug.WriteLine("File changed. Reloading data...");
             try
             {
-                ReloadData(); // Reload data and refresh the collection
-                FileChanged?.Invoke(); // Notify subscribers that data has changed
+                ReloadData();
+                FileChanged?.Invoke();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.LogError("Error reloading data on file change.", ex);
+               Debug.WriteLine("Error reloading data on file change.");
             }
         }
 
         private int TryParseMileage(string mileageString)
         {
-            // Default to 0 if the mileage field is empty or invalid
-            if (int.TryParse(mileageString, out int mileage))
-            {
-                return mileage;
-            }
-            return 0;
+            return int.TryParse(mileageString, out int mileage) ? mileage : 0;
         }
 
         public void ReloadData()
         {
-            // Clear the existing collection and reload it with fresh data
-            CarStatusCollection.Clear();
+            Debug.WriteLine("Reloading data...");
             var carStatuses = LoadCarStatus();
+            CarStatusCollection.Clear();
 
             foreach (var car in carStatuses)
             {

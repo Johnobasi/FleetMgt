@@ -1,39 +1,78 @@
 ﻿using System.ComponentModel;
 
-namespace Aleepartners.CarFleetManagement.Models
+namespace FleetMgt.Models
 {
-
-    //VIN, Number Plate, Colour, Make, Model, Mileage => properties of a car
-    public class Car  : INotifyPropertyChanged
+    public class Car : INotifyPropertyChanged
     {
-        public string Vin { get; set; }
-        public string NumberPlate { get; set; }
-        public string Colour { get; set; }
-        public string Make { get; set; }
-        public string Model { get; set; }
-        private double _averageFuelConsumption;
-
+        private string _vin;
+        private string _numberPlate;
+        private string _colour;
+        private string _make;
+        private string _model;
         private double _totalFuelConsumed;
-        private int _mileage;
+        private double _averageFuelConsumption;
+        private int    _mileage;
+
+        public string Vin
+        {
+            get => _vin;
+            set => SetProperty(ref _vin, value);
+        }
+
+        public string NumberPlate
+        {
+            get => _numberPlate;
+            set => SetProperty(ref _numberPlate, value);
+        }
+
+        public string Colour
+        {
+            get => _colour;
+            set => SetProperty(ref _colour, value);
+        }
+
+        public string Make
+        {
+            get => _make;
+            set => SetProperty(ref _make, value);
+        }
+
+        public string Model
+        {
+            get => _model;
+            set => SetProperty(ref _model, value);
+        }
+
         public double TotalFuelConsumed
         {
             get => _totalFuelConsumed;
-            set { _totalFuelConsumed = value; OnPropertyChanged(nameof(TotalFuelConsumed)); }
+            set => SetProperty(ref _totalFuelConsumed, value);
         }
 
         public double AverageFuelConsumption
         {
             get => _averageFuelConsumption;
-            set { _averageFuelConsumption = value; OnPropertyChanged(nameof(AverageFuelConsumption)); }
+            set => SetProperty(ref _averageFuelConsumption, value);
         }
 
         public int Mileage
         {
             get => _mileage;
-            set { _mileage = value; OnPropertyChanged(nameof(Mileage)); }
+            set => SetProperty(ref _mileage, value);
         }
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        private void SetProperty<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)
+        {
+            if (!EqualityComparer<T>.Default.Equals(field, value))
+            {
+                field = value;
+                OnPropertyChanged(propertyName);
+            }
+        }
+    }
 }

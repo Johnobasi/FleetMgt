@@ -1,4 +1,4 @@
-﻿namespace Aleepartners.CarFleetManagement.Models
+﻿namespace FleetMgt.Models
 {
 
     //field 1 = Number Plate

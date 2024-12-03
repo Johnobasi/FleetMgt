@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aleepartners.CarFleetManagement", "Aleepartners.CarFleetManagement\Aleepartners.CarFleetManagement.csproj", "{DA294075-9D59-4556-AF9B-80BC4BA5840B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FleetMgt", "Aleepartners.CarFleetManagement\FleetMgt.csproj", "{DA294075-9D59-4556-AF9B-80BC4BA5840B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aleepartners.CarFleetManagement.Tests", "..\Aleepartners.CarFleetManagement.Tests\Aleepartners.CarFleetManagement.Tests.csproj", "{6A824DE1-F42B-4828-998D-3D90EC3599AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FleetMgt.Tests", "..\Aleepartners.CarFleetManagement.Tests\FleetMgt.Tests.csproj", "{6A824DE1-F42B-4828-998D-3D90EC3599AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

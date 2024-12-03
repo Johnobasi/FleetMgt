@@ -1,18 +1,20 @@
-﻿using Aleepartners.CarFleetManagement.Models;
+﻿using FleetMgt.Models;
 using System.Collections.ObjectModel;
 
-namespace Aleepartners.CarFleetManagement.ViewModels
+namespace FleetMgt.ViewModels
 {
     public class MainViewModel : BindableBase
     {
-        private readonly DataManager _dataManager;
-        public ObservableCollection<Car> _carStatusCollection;
+        private readonly IDataManager _dataManager;
+        private ObservableCollection<Car> _carStatusCollection;
         private ObservableCollection<FuelEntry> _fuelEntryCollection;
+
         public ObservableCollection<Car> CarStatusCollection
         {
             get => _carStatusCollection;
             set => SetProperty(ref _carStatusCollection, value);
         }
+
         public ObservableCollection<FuelEntry> FuelEntryCollection
         {
             get => _fuelEntryCollection;
@@ -23,75 +25,43 @@ namespace Aleepartners.CarFleetManagement.ViewModels
         {
             _dataManager = new DataManager();
             _dataManager.FileChanged += OnFileChanged;
+            CarStatusCollection = _dataManager.CarStatusCollection;
+            FuelEntryCollection = new ObservableCollection<FuelEntry>();
             LoadData();
         }
 
         private void LoadData()
         {
-            // Load data from DataManager
-            CarStatusCollection = new ObservableCollection<Car>(_dataManager.LoadCarStatus());
-            
-            // Load fuel data from DataManager
+            // Reload data from DataManager
+            var carStatuses = _dataManager.LoadCarStatus();
             var fuelData = _dataManager.LoadFuelData();
-            FuelEntryCollection = new ObservableCollection<FuelEntry>();
 
-            // Convert FuelStatistics into FuelEntry objects for binding
+            // Update CarStatusCollection
+            CarStatusCollection.Clear();
+            foreach (var car in carStatuses)
+            {
+                CarStatusCollection.Add(car);
+            }
+
+            // Update FuelEntryCollection
+            FuelEntryCollection.Clear();
             foreach (var entry in fuelData)
             {
-                var numberPlate = entry.Key;
                 var fuelStats = entry.Value;
-
-                // Create a new FuelEntry for each number plate
                 FuelEntryCollection.Add(new FuelEntry
                 {
-                    NumberPlate = numberPlate,
+                    NumberPlate = entry.Key,
                     FuelInLitres = fuelStats.TotalFuel,
                     Mileage = fuelStats.TotalMileage
                 });
             }
-
-            // Calculate and update fuel consumption and mileage
-            UpdateFuelConsumption();
-
-            // Notify UI about updated CarStatusCollection
-            RaisePropertyChanged(nameof(CarStatusCollection));
-            RaisePropertyChanged(nameof(FuelEntryCollection));
         }
 
-        private void UpdateFuelConsumption()
-        {
-            // Clear previous values to avoid accumulation
-            foreach (var car in CarStatusCollection)
-            {
-                car.TotalFuelConsumed = 0;
-                car.Mileage = 0;
-                car.AverageFuelConsumption = 0;
-            }
-
-            foreach (var car in CarStatusCollection)
-            {
-                var carFuelEntries = FuelEntryCollection.Where(entry => entry.NumberPlate == car.NumberPlate);
-
-                // If there are fuel entries, proceed with calculations
-                if (carFuelEntries.Any())
-                {
-                    car.Mileage = carFuelEntries.Sum(entry => entry.Mileage);
-                    car.TotalFuelConsumed = carFuelEntries.Sum(entry => entry.FuelInLitres);
-
-                    car.AverageFuelConsumption = car.Mileage > 0
-                        ? (car.TotalFuelConsumed / car.Mileage) * 100 // Assuming L/100 km format
-                        : 0;
-                }
-            }
-
-            // Notify UI about updated CarStatuses collection
-            RaisePropertyChanged(nameof(CarStatusCollection));
-        }
-
-        // Handle real-time updates when files change
         private void OnFileChanged()
         {
-            LoadData();
+            RaisePropertyChanged(nameof(CarStatusCollection));
+            // Ensure file changes update on the UI thread
+            //App.Current.Dispatcher.Invoke(LoadData);
         }
     }
 }

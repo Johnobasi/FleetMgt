@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Aleepartners.CarFleetManagement
+namespace FleetMgt
 {
     public class Logger
     {

@@ -1,22 +1,28 @@
-﻿<Window x:Class="Aleepartners.CarFleetManagement.Views.MainView"
+﻿<Window x:Class="FleetMgt.Views.MainView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Aleepartners.CarFleetManagement.Views"
+        xmlns:local="clr-namespace:FleetMgt.Views"
         mc:Ignorable="d"
         Title="Car Fleet Management" Height="450" Width="800">
     <Grid>
-        <DataGrid ItemsSource="{Binding CarStatusCollection}" AutoGenerateColumns="False">
+        <DataGrid ItemsSource="{Binding CarStatusCollection}" 
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="True" 
+                  CanUserAddRows="False" 
+                  IsReadOnly="True" 
+                  SelectionMode="Single">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="VIN" Binding="{Binding Vin}" />
+                <DataGridTextColumn Header="VIN" Binding="{Binding Vin}" IsReadOnly="True" />
                 <DataGridTextColumn Header="Number Plate" Binding="{Binding NumberPlate}" />
                 <DataGridTextColumn Header="Colour" Binding="{Binding Colour}" />
                 <DataGridTextColumn Header="Make" Binding="{Binding Make}" />
                 <DataGridTextColumn Header="Model" Binding="{Binding Model}" />
-                <DataGridTextColumn Header="Mileage" Binding="{Binding Mileage}" />
-                <DataGridTextColumn Header="Total Fuel Consumed" Binding="{Binding TotalFuelConsumed}" />
-                <DataGridTextColumn Header="Average Fuel Consumption" Binding="{Binding AverageFuelConsumption, StringFormat={}{0:F2}}" />
+                <DataGridTextColumn Header="Mileage (km)" Binding="{Binding Mileage}" />
+                <DataGridTextColumn Header="Total Fuel Consumed (L)" Binding="{Binding TotalFuelConsumed}" />
+                <DataGridTextColumn Header="Average Fuel Consumption (L/100km)" 
+                                     Binding="{Binding AverageFuelConsumption, StringFormat={}{0:F2}}" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

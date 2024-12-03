@@ -1,8 +1,8 @@
 ﻿using System.Windows;
-using Aleepartners.CarFleetManagement.Models;
-using Aleepartners.CarFleetManagement.Views;
+using FleetMgt.Views;
+using FleetMgt.Models;
 
-namespace Aleepartners.CarFleetManagement
+namespace FleetMgt
 {
     /// <summary>
     /// Interaction logic for App.xaml
@@ -19,7 +19,6 @@ namespace Aleepartners.CarFleetManagement
             // Register services and views for navigation
             containerRegistry.Register<IDataManager, DataManager>();  
             containerRegistry.RegisterForNavigation<MainView>();
-
         }
     }
 
